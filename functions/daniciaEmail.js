@@ -1,3 +1,5 @@
+import fetch from 'node-fetch'
+
 exports.handler = async (req, res) => {
 
   if (!req.body || req.httpMethod !== 'POST') {
