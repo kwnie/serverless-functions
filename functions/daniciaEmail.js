@@ -1,7 +1,7 @@
 const axios = require('axios')
+const sgMail = require('@sendgrid/mail');
 
 const handler = async (req, res) => {
-
   if (!req.body || req.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -16,7 +16,7 @@ const handler = async (req, res) => {
 
   // Request for your merchant information so that you can use your email
   // to include as the 'from' property to send to the SendGrid API
-  const merchant = axios.get('api.chec.io/v1/merchants', {
+  const merchant = axios.get(process.env.CHEC_API_URL, {
     headers: {
         'X-Authoriza†ion': process.env.CHEC_SECRET_KEY,
     },
@@ -48,9 +48,11 @@ const handler = async (req, res) => {
     price: lineItem.line_total.formatted_with_symbol,
   }));
 
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   // Signature is verified, continue to send data to SendGrid
   // Create the email object payload to fire off to SendGrid
-  const emailPayload = {
+
+  const msg = {
     to: data.payload.customer.email,
     from: merchant.support_email,
     subject: `Thank you for your order ${data.payload.customer.firstname}`,
@@ -70,23 +72,26 @@ const handler = async (req, res) => {
     },
     // In addition to specifying the dynamic template data, you need to specify the template ID. This comes from your SendGrid dashboard when you create you dynamic template
     // https://mc.sendgrid.com/dynamic-templates
-    template_id: process.env.TEMPLATE_ID
+    template_id: process.env.TEMPLATE_ID,
+    html:''
   }
 
-  let response = {};
-  try {
-    // Call the SendGrid send mail endpoint
-    response = await sgMailClient.send(emailPayload);
-    return {
-      statusCode: 200,
-      headers,
-      body: 'Email sent!'
+  (async () => {
+    try {
+      await sgMail.send(msg)
+      return {
+            statusCode: 200,
+            headers,
+            body: 'Email sent!'
+          }
+    } catch (error) {
+      console.error(error);
+  
+      if (error.response) {
+        console.error(error.response.body)
+      }
     }
-  } catch (err) {
-    console.error('Error', err)
-  }
-  // Return the response from the request
-  return res.status(200).json(response);
+  })();
 }
 
 module.exports.handler = handler
