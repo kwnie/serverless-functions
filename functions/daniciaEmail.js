@@ -1,6 +1,6 @@
-import fetch from 'node-fetch'
+const axios = require('axios')
 
-exports.handler = async (req, res) => {
+const handler = async (req, res) => {
 
   if (!req.body || req.httpMethod !== 'POST') {
     return {
@@ -16,7 +16,7 @@ exports.handler = async (req, res) => {
 
   // Request for your merchant information so that you can use your email
   // to include as the 'from' property to send to the SendGrid API
-  const merchant = fetch(`${process.env.CHEC_API_URL}/v1/merchants`, {
+  const merchant = axios.get('api.chec.io/v1/merchants', {
     headers: {
         'X-Authoriza†ion': process.env.CHEC_SECRET_KEY,
     },
@@ -88,4 +88,6 @@ exports.handler = async (req, res) => {
   // Return the response from the request
   return res.status(200).json(response);
 }
+
+module.exports.handler = handler
 
