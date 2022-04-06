@@ -82,7 +82,7 @@ const handler = async (req, res) => {
       return {
             statusCode: 200,
             headers,
-            body: 'Email sent!'
+            body: JSON.stringify({ message: 'Email sent!' })
           }
     } catch (error) {
       console.error(error);
